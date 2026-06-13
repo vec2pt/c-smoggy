@@ -17,6 +17,11 @@ struct MemoryStruct {
   size_t size;
 };
 
+struct Coordinates {
+  float latitude;
+  float longitude;
+};
+
 static size_t write_cb(char *contents, size_t size, size_t nmemb, void *userp) {
   size_t realsize = size * nmemb;
   struct MemoryStruct *mem = (struct MemoryStruct *)userp;
@@ -36,11 +41,11 @@ static size_t write_cb(char *contents, size_t size, size_t nmemb, void *userp) {
   return realsize;
 }
 
-int main(void) {
+static int get_coordinates(char *city_name, struct Coordinates *coords) {
   CURL *curl;
   CURLcode result;
   struct MemoryStruct chunk;
-  int rc = EXIT_FAILURE;
+  char url_buf[256];
 
   result = curl_global_init(CURL_GLOBAL_ALL);
   if (result != CURLE_OK)
@@ -57,9 +62,93 @@ int main(void) {
   chunk.size = 0;
 
   // clang-format off
-  curl_easy_setopt(curl, CURLOPT_URL,
-                   "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=50.8643&longitude=21.0905&current=pm10,pm2_5,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide,european_aqi,us_aqi&forecast_days=1");
+  snprintf(url_buf, sizeof(url_buf), "https://geocoding-api.open-meteo.com/v1/search?name=%s&count=1&language=en&format=json", curl_easy_escape(curl, city_name, 0));
   // clang-format on
+  curl_easy_setopt(curl, CURLOPT_URL, url_buf);
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+  curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
+  result = curl_easy_perform(curl);
+  if (result != CURLE_OK) {
+    fprintf(stderr, "curl_easy_perform() failed: %s\n",
+            curl_easy_strerror(result));
+    curl_easy_cleanup(curl);
+    free(chunk.memory);
+    curl_global_cleanup();
+    return (int)result;
+  }
+
+  cJSON *json = cJSON_Parse(chunk.memory);
+  if (json == NULL) {
+    fprintf(stderr, "cJSON_Parse() failed\n");
+    cJSON_Delete(json);
+    curl_easy_cleanup(curl);
+    free(chunk.memory);
+    curl_global_cleanup();
+    return 1;
+  }
+
+  cJSON *results = cJSON_GetObjectItemCaseSensitive(json, "results");
+  if (!cJSON_IsArray(results)) {
+    fprintf(stderr, "cJSON_GetObjectItemCaseSensitive() failed for results\n");
+    cJSON_Delete(json);
+    curl_easy_cleanup(curl);
+    free(chunk.memory);
+    curl_global_cleanup();
+    return 1;
+  }
+
+  coords->latitude = cJSON_GetObjectItemCaseSensitive(
+                         cJSON_GetArrayItem(results, 0), "latitude")
+                         ->valuedouble;
+  coords->longitude = cJSON_GetObjectItemCaseSensitive(
+                          cJSON_GetArrayItem(results, 0), "longitude")
+                          ->valuedouble;
+
+  cJSON_Delete(json);
+  curl_easy_cleanup(curl);
+  free(chunk.memory);
+  curl_global_cleanup();
+  return 0;
+}
+
+int main(int argc, char *argv[]) {
+  CURL *curl;
+  CURLcode result;
+  struct MemoryStruct chunk;
+  int rc = EXIT_FAILURE;
+  char url_buf[256];
+
+  if (argc > 2) {
+    fprintf(stderr, "%s accepts exactly one argument.\n", argv[0]);
+    return EXIT_FAILURE;
+  }
+
+  struct Coordinates coords;
+  if (get_coordinates(argv[1] ? argv[1] : "Warsaw", &coords) != 0) {
+    fprintf(stderr, "get_coordinates() failed\n");
+    return EXIT_FAILURE;
+  }
+
+  result = curl_global_init(CURL_GLOBAL_ALL);
+  if (result != CURLE_OK)
+    return (int)result;
+
+  curl = curl_easy_init();
+  if (curl == NULL) {
+    fprintf(stderr, "curl_easy_perform() failed\n");
+    curl_global_cleanup();
+    return EXIT_FAILURE;
+  }
+
+  chunk.memory = malloc(1);
+  chunk.size = 0;
+
+  // clang-format off
+  snprintf(url_buf, sizeof(url_buf), "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=%f&longitude=%f&current=pm10,pm2_5,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide,european_aqi,us_aqi&forecast_days=1", coords.latitude, coords.longitude);
+  // clang-format on
+  curl_easy_setopt(curl, CURLOPT_URL, url_buf);
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
   curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
