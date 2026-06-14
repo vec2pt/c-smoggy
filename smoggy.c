@@ -61,9 +61,11 @@ static int get_coordinates(char *city_name, struct Coordinates *coords) {
   chunk.memory = malloc(1);
   chunk.size = 0;
 
+  char *city_name_url_encoded = curl_easy_escape(curl, city_name, 0);
   // clang-format off
-  snprintf(url_buf, sizeof(url_buf), "https://geocoding-api.open-meteo.com/v1/search?name=%s&count=1&language=en&format=json", curl_easy_escape(curl, city_name, 0));
+  snprintf(url_buf, sizeof(url_buf), "https://geocoding-api.open-meteo.com/v1/search?name=%s&count=1&language=en&format=json", city_name_url_encoded);
   // clang-format on
+  curl_free(city_name_url_encoded);
   curl_easy_setopt(curl, CURLOPT_URL, url_buf);
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
