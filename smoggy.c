@@ -199,22 +199,22 @@ int main(int argc, char *argv[]) {
   //        cJSON_GetObjectItemCaseSensitive(current_units, "us_aqi")
   //            ->valuestring);
 
-  printf("PM10%s%.1f %s\n", separator,
+  printf("PM₁₀%s%.1f %s\n", separator,
          cJSON_GetObjectItemCaseSensitive(current, "pm10")->valuedouble,
          cJSON_GetObjectItemCaseSensitive(current_units, "pm10")->valuestring);
-  printf("PM2.5%s%.1f %s\n", separator,
+  printf("PM₂.₅%s%.1f %s\n", separator,
          cJSON_GetObjectItemCaseSensitive(current, "pm2_5")->valuedouble,
          cJSON_GetObjectItemCaseSensitive(current_units, "pm2_5")->valuestring);
-  printf("Ozone 03%s%.1f %s\n", separator,
+  printf("Ozone 0₃%s%.1f %s\n", separator,
          cJSON_GetObjectItemCaseSensitive(current, "ozone")->valuedouble,
          cJSON_GetObjectItemCaseSensitive(current_units, "ozone")->valuestring);
-  printf("Nitrogen Dioxide NO2%s%.1f %s\n", separator,
+  printf("Nitrogen Dioxide NO₂%s%.1f %s\n", separator,
          cJSON_GetObjectItemCaseSensitive(current, "nitrogen_dioxide")
              ->valuedouble,
          cJSON_GetObjectItemCaseSensitive(current_units, "nitrogen_dioxide")
              ->valuestring);
   printf(
-      "Sulphur Dioxide SO2%s%.1f %s\n", separator,
+      "Sulphur Dioxide SO₂%s%.1f %s\n", separator,
       cJSON_GetObjectItemCaseSensitive(current, "sulphur_dioxide")->valuedouble,
       cJSON_GetObjectItemCaseSensitive(current_units, "sulphur_dioxide")
           ->valuestring);
