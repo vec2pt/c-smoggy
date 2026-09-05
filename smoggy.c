@@ -146,10 +146,7 @@ int smoggy_get_citydata(CURL *curl, struct SmoggyData *smoggydata,
   if (json == NULL) {
     const char *error_ptr = cJSON_GetErrorPtr();
     fprintf(stderr, "cJSON_Parse() failed: %s\n", error_ptr);
-    // TODO: Use goto
-    curl_easy_cleanup(curl);
     free(chunk.memory);
-    curl_global_cleanup();
     return EXIT_FAILURE;
   }
 
@@ -157,11 +154,8 @@ int smoggy_get_citydata(CURL *curl, struct SmoggyData *smoggydata,
   if (!cJSON_IsArray(geocoding_results)) {
     // TODO: Improve the message (e.g., "No city found")
     fprintf(stderr, "cJSON_GetObjectItemCaseSensitive() failed for results\n");
-    // TODO: Use goto
     cJSON_Delete(json);
-    curl_easy_cleanup(curl);
     free(chunk.memory);
-    curl_global_cleanup();
     return EXIT_FAILURE;
   }
 
@@ -203,21 +197,15 @@ int smoggy_get_airqualitydata(CURL *curl, struct SmoggyData *smoggydata) {
   if (json == NULL) {
     const char *error_ptr = cJSON_GetErrorPtr();
     fprintf(stderr, "cJSON_Parse() failed: %s\n", error_ptr);
-    // TODO: Use goto
-    curl_easy_cleanup(curl);
     free(chunk.memory);
-    curl_global_cleanup();
     return EXIT_FAILURE;
   }
 
   cJSON *airquality_current = cJSON_GetObjectItemCaseSensitive(json, "current");
   if (!cJSON_IsObject(airquality_current)) {
     fprintf(stderr, "cJSON_GetObjectItemCaseSensitive() failed for current\n");
-    // TODO: Use goto
     cJSON_Delete(json);
-    curl_easy_cleanup(curl);
     free(chunk.memory);
-    curl_global_cleanup();
     return EXIT_FAILURE;
   }
 
@@ -226,11 +214,8 @@ int smoggy_get_airqualitydata(CURL *curl, struct SmoggyData *smoggydata) {
   if (!cJSON_IsObject(airquality_current_units)) {
     fprintf(stderr,
             "cJSON_GetObjectItemCaseSensitive() failed for current_units\n");
-    // TODO: Use goto
     cJSON_Delete(json);
-    curl_easy_cleanup(curl);
     free(chunk.memory);
-    curl_global_cleanup();
     return EXIT_FAILURE;
   }
 
@@ -302,7 +287,7 @@ void smoggy_print(struct SmoggyData *smoggydata) {
 int main(int argc, char *argv[]) {
   CURL *curl;
   CURLcode result;
-  int smoggy_code;
+  int smoggy_code = EXIT_SUCCESS;
 
   // TODO: Improve cli argument handling.
   if (argc > 2) {
@@ -329,26 +314,18 @@ int main(int argc, char *argv[]) {
   // results (instead of using the first one on the list)?
   smoggy_code =
       smoggy_get_citydata(curl, smoggydata, argv[1] ? argv[1] : "Warsaw");
-  if (smoggy_code == EXIT_FAILURE) {
-    // TODO: Use goto
-    smoggy_cleanup(smoggydata);
-    curl_easy_cleanup(curl);
-    curl_global_cleanup();
-    return EXIT_FAILURE;
-  }
+  if (smoggy_code == EXIT_FAILURE)
+    goto cleanup;
 
   smoggy_code = smoggy_get_airqualitydata(curl, smoggydata);
-  if (smoggy_code == EXIT_FAILURE) {
-    // TODO: Use goto
-    smoggy_cleanup(smoggydata);
-    curl_easy_cleanup(curl);
-    curl_global_cleanup();
-    return EXIT_FAILURE;
-  }
+  if (smoggy_code == EXIT_FAILURE)
+    goto cleanup;
 
   smoggy_print(smoggydata);
 
+cleanup:
   smoggy_cleanup(smoggydata);
   curl_easy_cleanup(curl);
   curl_global_cleanup();
+  return smoggy_code;
 }
