@@ -1,4 +1,10 @@
-/* Acknowledgments:
+/*
+ * Copyright (c) 2026 vec2pt
+ *
+ * Licensed under the MIT License.
+ * See the LICENSE for details.
+ *
+ * Acknowledgments:
  * https://curl.se/libcurl/c/getinmemory.html
  * https://www.geeksforgeeks.org/c/cjson-json-file-write-read-modify-in-c/
  */

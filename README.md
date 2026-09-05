@@ -16,6 +16,13 @@ smoggy
 smoggy "Nowa Słupia"
 ```
 
+## Build from source
+
+To compile and run smoggy, you need to install the `libcjson` and `libcurl` libraries.
+
+1. Clone the repository.
+2. Build from source code using the `make` command.
+
 ## Similar projects
 
 - [stormy](https://github.com/ashish0kumar/stormy)
