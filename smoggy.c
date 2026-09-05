@@ -126,15 +126,17 @@ CURLcode get_curl_data(CURLcode *curl, char *url, struct MemoryStruct *chunk) {
 
 int smoggy_get_citydata(CURL *curl, struct SmoggyData *smoggydata,
                         const char *city_name) {
-  char url[256]; // TODO: Do not use a hard-coded URL length!
+  // clang-format off
+  const char *url_template = "https://geocoding-api.open-meteo.com/v1/search?name=%s&count=1&language=en&format=json";
+  // clang-format on
   struct MemoryStruct chunk;
 
   char *city_name_url_encoded = curl_easy_escape(curl, city_name, 0);
-  // clang-format off
-  snprintf(url, sizeof(url), "https://geocoding-api.open-meteo.com/v1/search?name=%s&count=1&language=en&format=json", city_name_url_encoded);
-  // clang-format on
+  size_t url_len = snprintf(NULL, 0, url_template, city_name_url_encoded);
+  char *url_buf = malloc(url_len + 1);
+  snprintf(url_buf, url_len + 1, url_template, city_name_url_encoded);
   curl_free(city_name_url_encoded);
-  CURLcode result = get_curl_data(curl, url, &chunk);
+  CURLcode result = get_curl_data(curl, url_buf, &chunk);
   if (result != CURLE_OK) {
     // fprintf(stderr, "get_curl_data() failed: %s\n",
     // curl_easy_strerror(result));
@@ -172,6 +174,7 @@ int smoggy_get_citydata(CURL *curl, struct SmoggyData *smoggydata,
   smoggydata->city_longitude = cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(geocoding_results, 0), "longitude")->valuedouble;
   // clang-format on
 
+  free(url_buf);
   cJSON_Delete(json);
   free(chunk.memory);
 
@@ -179,13 +182,17 @@ int smoggy_get_citydata(CURL *curl, struct SmoggyData *smoggydata,
 }
 
 int smoggy_get_airqualitydata(CURL *curl, struct SmoggyData *smoggydata) {
-  char url[256]; // TODO: Do not use a hard-coded URL length!
+  // clang-format off
+  const char *url_template = "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=%f&longitude=%f&current=pm10,pm2_5,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide,european_aqi,us_aqi&forecast_days=1";
+  // clang-format on
   struct MemoryStruct chunk;
 
-  // clang-format off
-  snprintf(url, sizeof(url), "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=%f&longitude=%f&current=pm10,pm2_5,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide,european_aqi,us_aqi&forecast_days=1", smoggydata->city_latitude, smoggydata->city_longitude);
-  // clang-format on
-  CURLcode result = get_curl_data(curl, url, &chunk);
+  size_t url_len = snprintf(NULL, 0, url_template, smoggydata->city_latitude,
+                            smoggydata->city_longitude);
+  char *url_buf = malloc(url_len + 1);
+  snprintf(url_buf, url_len + 1, url_template, smoggydata->city_latitude,
+           smoggydata->city_longitude);
+  CURLcode result = get_curl_data(curl, url_buf, &chunk);
   if (result != CURLE_OK) {
     // fprintf(stderr, "get_curl_data() failed: %s\n",
     // curl_easy_strerror(result));
@@ -259,6 +266,7 @@ int smoggy_get_airqualitydata(CURL *curl, struct SmoggyData *smoggydata) {
   strcpy(smoggydata->carbon_monoxide_unit , smoggydata_carbon_monoxide_unit );
   // clang-format on
 
+  free(url_buf);
   cJSON_Delete(json);
   free(chunk.memory);
 
