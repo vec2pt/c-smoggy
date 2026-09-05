@@ -266,21 +266,40 @@ int smoggy_get_airqualitydata(CURL *curl, struct SmoggyData *smoggydata) {
 }
 
 void smoggy_print(struct SmoggyData *smoggydata) {
-  // printf("Name: %s\n", smoggydata->city_name);
-  // printf("Code: %s\n", smoggydata->city_country_code);
-  // printf("Latitude: %f\n", smoggydata->city_latitude);
-  // printf("Longitude: %f\n", smoggydata->city_longitude);
+  // TODO: Create better visualizations / graph.
+  const char *graph[7];
+  graph[0] = "II:::::.....                       .....::::IIIIIHHHHHMMMMMMMM";
+  graph[1] = ".....                       .....:::::IIIIHHHHHMMMMMMMMMMMMMMM";
+  graph[2] = "                     .....:::::IIIIHHHHHHMMMMMMMMMMMMMMMMMMMMM";
+  graph[3] = "               .....::::IIIIIHHHHHMMMMMMMMMMMMMMMMMMMMMMHHHHHH";
+  graph[4] = "        .....:::::IIIIHHHHHMMMMMMMMMMMMMMMMMMMMMMMHHHHHIIII:::";
+  graph[5] = " .....:::::IIIIHHHHHHMMMMMMMMMMMMMMMMMMMMMMHHHHHIIIII::::.....";
+  graph[6] = "::::IIIIIHHHHHMMMMMMMMMMMMMMMMMMMMMMHHHHHHIIII:::::.....      ";
+
+  // TODO: Use the U.S. AQI for cities in the U.S.
+  int aqi = smoggydata->european_aqi;
+  aqi = aqi < 0 ? 0 : aqi;
+  aqi = aqi >= 100 ? 100 : aqi;
+  const size_t start = aqi / 2;
+  const size_t len = 12;
+
+  char graph_slice[7][len + 1];
+  for (int i = 0; i < 7; i++) {
+    strncpy(graph_slice[i], graph[i] + start, len);
+    graph_slice[i][len] = '\0';
+  }
 
   // clang-format off
-  printf("Location%s%s (%s)\n",             separator, smoggydata->city_name       , smoggydata->city_country_code    );
   // printf("European AQI%s%d %s\n",           separator, smoggydata->european_aqi    , smoggydata->european_aqi_unit    );
   // printf("U.S. AQI%s%d %s\n",               separator, smoggydata->us_aqi          , smoggydata->us_aqi_unit          );
-  printf("PM₁₀%s%.1f %s\n",                 separator, smoggydata->pm10            , smoggydata->pm10_unit            );
-  printf("PM₂.₅%s%.1f %s\n",                separator, smoggydata->pm2_5           , smoggydata->pm2_5_unit           );
-  printf("Ozone 0₃%s%.1f %s\n",             separator, smoggydata->ozone           , smoggydata->ozone_unit           );
-  printf("Nitrogen Dioxide NO₂%s%.1f %s\n", separator, smoggydata->nitrogen_dioxide, smoggydata->nitrogen_dioxide_unit);
-  printf("Sulphur Dioxide SO₂%s%.1f %s\n",  separator, smoggydata->sulphur_dioxide , smoggydata->sulphur_dioxide_unit );
-  printf("Carbon Monoxide CO%s%.1f %s\n",   separator, smoggydata->carbon_monoxide , smoggydata->carbon_monoxide_unit );
+
+  printf("%s  Location%s%s (%s)\n",             graph_slice[0], separator, smoggydata->city_name       , smoggydata->city_country_code    );
+  printf("%s  PM₁₀%s%.1f %s\n",                 graph_slice[1], separator, smoggydata->pm10            , smoggydata->pm10_unit            );
+  printf("%s  PM₂.₅%s%.1f %s\n",                graph_slice[2], separator, smoggydata->pm2_5           , smoggydata->pm2_5_unit           );
+  printf("%s  Ozone 0₃%s%.1f %s\n",             graph_slice[3], separator, smoggydata->ozone           , smoggydata->ozone_unit           );
+  printf("%s  Nitrogen Dioxide NO₂%s%.1f %s\n", graph_slice[4], separator, smoggydata->nitrogen_dioxide, smoggydata->nitrogen_dioxide_unit);
+  printf("%s  Sulphur Dioxide SO₂%s%.1f %s\n",  graph_slice[5], separator, smoggydata->sulphur_dioxide , smoggydata->sulphur_dioxide_unit );
+  printf("%s  Carbon Monoxide CO%s%.1f %s\n",   graph_slice[6], separator, smoggydata->carbon_monoxide , smoggydata->carbon_monoxide_unit );
   // clang-format on
 }
 
