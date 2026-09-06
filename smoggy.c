@@ -303,6 +303,9 @@ void smoggy_print(struct SmoggyData *smoggydata) {
     graph_slice[i][len] = '\0';
   }
 
+  // TODO: (?) Plain text superscripts and subscripts
+  //       Ref: https://cse.sc.edu/~fenner/latex-ASCII.pdf
+
   // clang-format off
   // printf("European AQI%s%d %s\n",           separator, smoggydata->european_aqi    , smoggydata->european_aqi_unit    );
   // printf("U.S. AQI%s%d %s\n",               separator, smoggydata->us_aqi          , smoggydata->us_aqi_unit          );
