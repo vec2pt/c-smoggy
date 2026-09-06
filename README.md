@@ -27,3 +27,4 @@ To compile and run smoggy, you need to install the `libcjson` and `libcurl` libr
 
 - [stormy](https://github.com/ashish0kumar/stormy)
 - [rainy](https://github.com/liveslol/rainy)
+- [wttr.in](https://github.com/chubin/wttr.in)
